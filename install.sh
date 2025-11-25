@@ -46,9 +46,23 @@ chmod +x ~/bin/devopen
 
 # Ensure ~/bin is in PATH
 if [[ ":$PATH:" != *":$HOME/bin:"* ]]; then
-    echo -e "${YELLOW}Note: ~/bin is not in your PATH${NC}"
-    echo "Add this line to your ~/.bashrc or ~/.zshrc:"
-    echo "  export PATH=\"\$HOME/bin:\$PATH\""
+    echo -e "${YELLOW}Adding ~/bin to PATH in ~/.zshrc${NC}"
+
+    # Add to .zshrc if it exists
+    if [ -f "$HOME/.zshrc" ]; then
+        if ! grep -q 'export PATH="$HOME/bin:$PATH"' "$HOME/.zshrc"; then
+            echo 'export PATH="$HOME/bin:$PATH"' >> "$HOME/.zshrc"
+            echo -e "${GREEN}Added PATH export to ~/.zshrc${NC}"
+        fi
+    fi
+
+    # Add to .bashrc if it exists
+    if [ -f "$HOME/.bashrc" ]; then
+        if ! grep -q 'export PATH="$HOME/bin:$PATH"' "$HOME/.bashrc"; then
+            echo 'export PATH="$HOME/bin:$PATH"' >> "$HOME/.bashrc"
+            echo -e "${GREEN}Added PATH export to ~/.bashrc${NC}"
+        fi
+    fi
 fi
 
 # Install tmux config
