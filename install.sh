@@ -13,6 +13,170 @@ DOTFILES_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 echo "Installing dotfiles from ${DOTFILES_DIR}"
 
+# Detect OS and install dependencies
+detect_os() {
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        if [ -f /etc/os-release ]; then
+            . /etc/os-release
+            echo "$ID"
+        else
+            echo "linux-unknown"
+        fi
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        echo "macos"
+    else
+        echo "unknown"
+    fi
+}
+
+install_dependencies() {
+    local os=$(detect_os)
+
+    echo "Detected OS: $os"
+
+    case "$os" in
+        rhel|centos)
+            echo -e "${YELLOW}Installing dependencies for RHEL/CentOS...${NC}"
+
+            # Install EPEL repository if not already installed
+            if ! rpm -q epel-release &>/dev/null; then
+                echo "Installing EPEL repository..."
+                sudo dnf install -y epel-release
+            fi
+
+            # Install required build tools and dependencies
+            echo "Installing build tools and dependencies..."
+            sudo dnf install -y \
+                git \
+                curl \
+                wget \
+                tmux \
+                zsh \
+                gcc \
+                make \
+                cmake \
+                nodejs \
+                npm
+
+            # Install neovim from EPEL or build from source
+            if rpm -q neovim &>/dev/null; then
+                echo -e "${GREEN}Neovim already installed${NC}"
+            else
+                echo "Installing neovim..."
+                # Try to install from package manager first
+                if sudo dnf install -y neovim 2>/dev/null; then
+                    echo -e "${GREEN}Neovim installed via dnf${NC}"
+                else
+                    # If package manager fails, build from source
+                    echo "Building neovim from source..."
+
+                    # Install build dependencies
+                    sudo dnf install -y \
+                        git \
+                        gcc \
+                        g++ \
+                        cmake \
+                        make \
+                        pkg-config \
+                        unzip \
+                        gettext-devel
+
+                    # Clone and build neovim
+                    local temp_dir=$(mktemp -d)
+                    cd "$temp_dir"
+                    git clone --depth 1 https://github.com/neovim/neovim.git
+                    cd neovim
+                    make CMAKE_BUILD_TYPE=Release
+                    sudo make install
+                    cd "$DOTFILES_DIR"
+                    rm -rf "$temp_dir"
+                    echo -e "${GREEN}Neovim built and installed from source${NC}"
+                fi
+            fi
+            ;;
+        fedora)
+            echo -e "${YELLOW}Installing dependencies for Fedora...${NC}"
+            sudo dnf install -y \
+                git \
+                curl \
+                wget \
+                neovim \
+                tmux \
+                zsh \
+                gcc \
+                make \
+                cmake \
+                nodejs \
+                npm
+            ;;
+        ubuntu|debian)
+            echo -e "${YELLOW}Installing dependencies for Debian/Ubuntu...${NC}"
+            sudo apt-get update
+            sudo apt-get install -y \
+                git \
+                curl \
+                wget \
+                neovim \
+                tmux \
+                zsh \
+                build-essential \
+                cmake \
+                nodejs \
+                npm
+            ;;
+        macos)
+            echo -e "${YELLOW}Installing dependencies for macOS...${NC}"
+
+            # Check if Homebrew is installed
+            if ! command -v brew &> /dev/null; then
+                echo "Installing Homebrew..."
+                /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            fi
+
+            brew install \
+                git \
+                curl \
+                wget \
+                neovim \
+                tmux \
+                zsh \
+                cmake \
+                node
+            ;;
+        *)
+            echo -e "${YELLOW}Unsupported OS: $os${NC}"
+            echo "Please install the following manually:"
+            echo "  - git"
+            echo "  - neovim"
+            echo "  - tmux"
+            echo "  - zsh (optional)"
+            ;;
+    esac
+}
+
+# Parse command line arguments
+SKIP_CLAUDE=false
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --skip-claude)
+            SKIP_CLAUDE=true
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Usage: $0 [--skip-claude]"
+            exit 1
+            ;;
+    esac
+done
+
+# Ask user if they want to install dependencies
+read -p "Install system dependencies? (y/n) " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    install_dependencies
+fi
+
 # Function to backup existing file/directory
 backup_if_exists() {
     local target=$1
@@ -73,10 +237,12 @@ create_symlink "${DOTFILES_DIR}/tmux/.tmux.conf" ~/.tmux.conf
 echo "Installing neovim config..."
 create_symlink "${DOTFILES_DIR}/nvim" ~/.config/nvim
 
-# Install Claude Code config
-echo "Installing Claude Code config..."
-mkdir -p ~/.claude
-create_symlink "${DOTFILES_DIR}/claude-code/settings.json" ~/.claude/settings.json
+# Install Claude Code config (unless skipped)
+if [ "$SKIP_CLAUDE" = false ]; then
+    echo "Installing Claude Code config..."
+    mkdir -p ~/.claude
+    create_symlink "${DOTFILES_DIR}/claude-code/settings.json" ~/.claude/settings.json
+fi
 
 echo -e "${GREEN}Installation complete!${NC}"
 echo ""
