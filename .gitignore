@@ -1,0 +1,24 @@
+# Sensitive files
+*.credentials.json
+**/credentials.json
+.env
+.env.*
+*.key
+*.pem
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Backup files
+*.backup.*
+*~
+*.swp
+*.swo
+
+# Local overrides
+local.conf
+*.local

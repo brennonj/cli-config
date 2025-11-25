@@ -1,0 +1,192 @@
+#!/usr/bin/env bash
+
+# devopen - Open a coding project with the complete tmux workflow
+# Based on WORKFLOW_GUIDE.md
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Print usage
+usage() {
+    cat <<EOF
+Usage: devopen [PROJECT_DIR] [OPTIONS]
+
+Open a coding project with the complete tmux development environment.
+
+Arguments:
+    PROJECT_DIR    Path to project directory (default: current directory)
+
+Options:
+    -n NAME        Custom session name (default: derived from directory)
+    -s             Skip opening Neovim automatically
+    -c             Skip starting Claude Code automatically
+    -h             Show this help message
+
+Examples:
+    devopen ~/Developer/my-project
+    devopen .
+    devopen ~/projects/website -n website-dev
+    devopen ~/code/api -s -c    # Skip Neovim and Claude
+
+Windows created:
+    1. editor     - Neovim (unless -s is used)
+    2. test       - For running tests/dev server
+    3. claude     - Claude Code (unless -c is used)
+    4. terminal   - General terminal operations
+
+Keybindings:
+    Alt-h/l       - Switch between windows (no prefix!)
+    Ctrl-a 1-4    - Jump directly to window 1-4
+    Ctrl-a d      - Detach from session
+    See WORKFLOW_GUIDE.md for complete keybindings
+EOF
+}
+
+# Parse arguments
+PROJECT_DIR=""
+SESSION_NAME=""
+SKIP_NVIM=false
+SKIP_CLAUDE=false
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        -n|--name)
+            SESSION_NAME="$2"
+            shift 2
+            ;;
+        -s|--skip-nvim)
+            SKIP_NVIM=true
+            shift
+            ;;
+        -c|--skip-claude)
+            SKIP_CLAUDE=true
+            shift
+            ;;
+        -*)
+            echo -e "${RED}Error: Unknown option $1${NC}"
+            usage
+            exit 1
+            ;;
+        *)
+            if [[ -z "$PROJECT_DIR" ]]; then
+                PROJECT_DIR="$1"
+            else
+                echo -e "${RED}Error: Multiple project directories specified${NC}"
+                usage
+                exit 1
+            fi
+            shift
+            ;;
+    esac
+done
+
+# Default to current directory if not specified
+if [[ -z "$PROJECT_DIR" ]]; then
+    PROJECT_DIR="$(pwd)"
+fi
+
+# Resolve to absolute path
+PROJECT_DIR="$(cd "$PROJECT_DIR" 2>/dev/null && pwd)" || {
+    echo -e "${RED}Error: Directory does not exist: $PROJECT_DIR${NC}"
+    exit 1
+}
+
+# Validate directory
+if [[ ! -d "$PROJECT_DIR" ]]; then
+    echo -e "${RED}Error: Not a directory: $PROJECT_DIR${NC}"
+    exit 1
+fi
+
+# Generate session name from directory if not provided
+if [[ -z "$SESSION_NAME" ]]; then
+    SESSION_NAME=$(basename "$PROJECT_DIR" | tr '.' '_' | tr ' ' '_' | tr '[:upper:]' '[:lower:]')
+fi
+
+# Check if tmux is installed
+if ! command -v tmux &> /dev/null; then
+    echo -e "${RED}Error: tmux is not installed${NC}"
+    echo "Install with: brew install tmux"
+    exit 1
+fi
+
+# Check if session already exists
+if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+    echo -e "${GREEN}Attaching to existing session: $SESSION_NAME${NC}"
+
+    # If we're already in a tmux session, switch to it; otherwise attach
+    if [[ -n "$TMUX" ]]; then
+        tmux switch-client -t "$SESSION_NAME"
+    else
+        tmux attach-session -t "$SESSION_NAME"
+    fi
+    exit 0
+fi
+
+# Create new session with 4-window layout
+echo -e "${GREEN}Creating new session: $SESSION_NAME${NC}"
+echo -e "${YELLOW}Project: $PROJECT_DIR${NC}"
+
+# Create session with first window named "editor"
+tmux new-session -d -s "$SESSION_NAME" -n "editor" -c "$PROJECT_DIR"
+
+# Window 1: Editor (Neovim)
+if [[ "$SKIP_NVIM" == false ]]; then
+    # Check if nvim is available
+    if command -v nvim &> /dev/null; then
+        tmux send-keys -t "$SESSION_NAME:1" "nvim ." Enter
+    else
+        echo -e "${YELLOW}Warning: nvim not found, opening shell instead${NC}"
+    fi
+fi
+
+# Window 2: Tests/Server
+tmux new-window -t "$SESSION_NAME:2" -n "test" -c "$PROJECT_DIR"
+
+# Window 3: Claude Code
+tmux new-window -t "$SESSION_NAME:3" -n "claude" -c "$PROJECT_DIR"
+if [[ "$SKIP_CLAUDE" == false ]]; then
+    # Check if claude is available
+    if command -v claude &> /dev/null; then
+        tmux send-keys -t "$SESSION_NAME:3" "claude" Enter
+    else
+        echo -e "${YELLOW}Warning: claude not found, opening shell instead${NC}"
+        echo -e "${YELLOW}Install Claude Code from: https://github.com/anthropics/claude-code${NC}"
+    fi
+fi
+
+# Window 4: Terminal
+tmux new-window -t "$SESSION_NAME:4" -n "terminal" -c "$PROJECT_DIR"
+
+# Select the editor window (window 1)
+tmux select-window -t "$SESSION_NAME:1"
+
+# Attach to the session
+echo -e "${GREEN}Session created successfully!${NC}"
+echo ""
+echo "Windows:"
+echo "  1. editor     - Neovim"
+echo "  2. test       - Tests/Dev Server"
+echo "  3. claude     - Claude Code"
+echo "  4. terminal   - General Operations"
+echo ""
+echo "Quick tips:"
+echo "  • Alt-h/l to switch windows"
+echo "  • Ctrl-a 1-4 to jump to window"
+echo "  • Ctrl-a d to detach"
+echo ""
+
+# Attach to the session
+if [[ -n "$TMUX" ]]; then
+    tmux switch-client -t "$SESSION_NAME"
+else
+    tmux attach-session -t "$SESSION_NAME"
+fi
