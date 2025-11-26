@@ -49,9 +49,7 @@ install_dependencies() {
             sudo dnf install -y \
                 git \
                 curl \
-                wget \
                 tmux \
-                zsh \
                 gcc \
                 make \
                 cmake \
@@ -99,10 +97,8 @@ install_dependencies() {
             sudo dnf install -y \
                 git \
                 curl \
-                wget \
                 neovim \
                 tmux \
-                zsh \
                 gcc \
                 make \
                 cmake \
@@ -115,10 +111,8 @@ install_dependencies() {
             sudo apt-get install -y \
                 git \
                 curl \
-                wget \
                 neovim \
                 tmux \
-                zsh \
                 build-essential \
                 cmake \
                 nodejs \
@@ -131,17 +125,48 @@ install_dependencies() {
             if ! command -v brew &> /dev/null; then
                 echo "Installing Homebrew..."
                 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+                # Add Homebrew to PATH for this session
+                if [[ $(uname -m) == 'arm64' ]]; then
+                    eval "$(/opt/homebrew/bin/brew shellenv)"
+                else
+                    eval "$(/usr/local/bin/brew shellenv)"
+                fi
+            else
+                echo -e "${GREEN}Homebrew is already installed${NC}"
             fi
 
-            brew install \
-                git \
-                curl \
-                wget \
-                neovim \
-                tmux \
-                zsh \
-                cmake \
-                node
+            # Function to install or upgrade a package
+            install_or_upgrade() {
+                local package=$1
+                if brew list "$package" &> /dev/null; then
+                    echo -e "${GREEN}$package is already installed${NC}"
+                    echo -e "${YELLOW}Checking for updates...${NC}"
+                    brew upgrade "$package" || echo -e "${GREEN}$package is up to date${NC}"
+                else
+                    echo -e "${YELLOW}Installing $package...${NC}"
+                    brew install "$package"
+                fi
+            }
+
+            # Install or upgrade required packages
+            install_or_upgrade "git"
+            install_or_upgrade "curl"
+            install_or_upgrade "neovim"
+            install_or_upgrade "tmux"
+            install_or_upgrade "cmake"
+            install_or_upgrade "node"
+
+            # Install Claude Code CLI (requires tap first)
+            if ! brew list claude-code &> /dev/null; then
+                echo -e "${YELLOW}Installing Claude Code CLI...${NC}"
+                brew tap anthropics/claude
+                brew install claude-code
+            else
+                echo -e "${GREEN}claude-code is already installed${NC}"
+                echo -e "${YELLOW}Checking for updates...${NC}"
+                brew upgrade claude-code || echo -e "${GREEN}claude-code is up to date${NC}"
+            fi
             ;;
         *)
             echo -e "${YELLOW}Unsupported OS: $os${NC}"

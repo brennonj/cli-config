@@ -21,6 +21,9 @@ cd ~/.dotfiles
 ```
 
 The install script will:
+- Detect your operating system (macOS, Linux variants)
+- Install Homebrew (macOS) or system package managers
+- Install/upgrade required packages: tmux, neovim, claude-code, and dependencies
 - Create symlinks from this repo to the appropriate locations
 - Backup any existing configs with timestamps
 - Set up necessary directories
