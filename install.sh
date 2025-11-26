@@ -91,6 +91,16 @@ install_dependencies() {
                     echo -e "${GREEN}Neovim built and installed from source${NC}"
                 fi
             fi
+
+            # Install Claude Code CLI via npm
+            if ! command -v claude &> /dev/null; then
+                echo -e "${YELLOW}Installing Claude Code CLI via npm...${NC}"
+                sudo npm install -g claude-code
+            else
+                echo -e "${GREEN}claude-code is already installed${NC}"
+                echo -e "${YELLOW}Checking for updates...${NC}"
+                sudo npm update -g claude-code || echo -e "${GREEN}claude-code is up to date${NC}"
+            fi
             ;;
         fedora)
             echo -e "${YELLOW}Installing dependencies for Fedora...${NC}"
@@ -104,6 +114,16 @@ install_dependencies() {
                 cmake \
                 nodejs \
                 npm
+
+            # Install Claude Code CLI via npm
+            if ! command -v claude &> /dev/null; then
+                echo -e "${YELLOW}Installing Claude Code CLI via npm...${NC}"
+                sudo npm install -g claude-code
+            else
+                echo -e "${GREEN}claude-code is already installed${NC}"
+                echo -e "${YELLOW}Checking for updates...${NC}"
+                sudo npm update -g claude-code || echo -e "${GREEN}claude-code is up to date${NC}"
+            fi
             ;;
         ubuntu|debian)
             echo -e "${YELLOW}Installing dependencies for Debian/Ubuntu...${NC}"
@@ -117,6 +137,16 @@ install_dependencies() {
                 cmake \
                 nodejs \
                 npm
+
+            # Install Claude Code CLI via npm
+            if ! command -v claude &> /dev/null; then
+                echo -e "${YELLOW}Installing Claude Code CLI via npm...${NC}"
+                sudo npm install -g claude-code
+            else
+                echo -e "${GREEN}claude-code is already installed${NC}"
+                echo -e "${YELLOW}Checking for updates...${NC}"
+                sudo npm update -g claude-code || echo -e "${GREEN}claude-code is up to date${NC}"
+            fi
             ;;
         macos)
             echo -e "${YELLOW}Installing dependencies for macOS...${NC}"
@@ -157,15 +187,14 @@ install_dependencies() {
             install_or_upgrade "cmake"
             install_or_upgrade "node"
 
-            # Install Claude Code CLI (requires tap first)
-            if ! brew list claude-code &> /dev/null; then
-                echo -e "${YELLOW}Installing Claude Code CLI...${NC}"
-                brew tap anthropics/claude
-                brew install claude-code
+            # Install Claude Code CLI via npm
+            if ! command -v claude &> /dev/null; then
+                echo -e "${YELLOW}Installing Claude Code CLI via npm...${NC}"
+                npm install -g claude-code
             else
                 echo -e "${GREEN}claude-code is already installed${NC}"
                 echo -e "${YELLOW}Checking for updates...${NC}"
-                brew upgrade claude-code || echo -e "${GREEN}claude-code is up to date${NC}"
+                npm update -g claude-code || echo -e "${GREEN}claude-code is up to date${NC}"
             fi
             ;;
         *)

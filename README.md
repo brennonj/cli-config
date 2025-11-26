@@ -23,7 +23,8 @@ cd ~/.dotfiles
 The install script will:
 - Detect your operating system (macOS, Linux variants)
 - Install Homebrew (macOS) or system package managers
-- Install/upgrade required packages: tmux, neovim, claude-code, and dependencies
+- Install/upgrade required packages: tmux, neovim, Node.js, and dependencies
+- Install Claude Code CLI via npm
 - Create symlinks from this repo to the appropriate locations
 - Backup any existing configs with timestamps
 - Set up necessary directories
@@ -34,6 +35,9 @@ The install script will:
 If you prefer to set things up manually:
 
 ```bash
+# Install Claude Code CLI via npm
+npm install -g claude-code
+
 # Link configs
 ln -sf ~/.dotfiles/tmux/.tmux.conf ~/.tmux.conf
 ln -sf ~/.dotfiles/nvim ~/.config/nvim

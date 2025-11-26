@@ -31,13 +31,13 @@ Examples:
     devopen ~/Developer/my-project
     devopen .
     devopen ~/projects/website -n website-dev
-    devopen ~/code/api -s -c    # Skip Neovim and Claude
+    devopen ~/code/api -s -c       # Skip Neovim and Claude
 
 Windows created:
     1. editor     - Neovim (unless -s is used)
-    2. test       - For running tests/dev server
+    2. terminal   - General terminal operations
     3. claude     - Claude Code (unless -c is used)
-    4. terminal   - General terminal operations
+    4. server     - For running dev server/tests
 
 Keybindings:
     Alt-h/l       - Switch between windows (no prefix!)
@@ -148,14 +148,16 @@ if [[ "$SKIP_NVIM" == false ]]; then
     fi
 fi
 
-# Window 2: Tests/Server
-tmux new-window -t "$SESSION_NAME:2" -n "test" -c "$PROJECT_DIR"
+# Window 2: Terminal
+tmux new-window -t "$SESSION_NAME:2" -n "terminal" -c "$PROJECT_DIR"
 
 # Window 3: Claude Code
 tmux new-window -t "$SESSION_NAME:3" -n "claude" -c "$PROJECT_DIR"
 if [[ "$SKIP_CLAUDE" == false ]]; then
     # Check if claude is available
     if command -v claude &> /dev/null; then
+        # Small delay to ensure shell is ready
+        sleep 0.1
         tmux send-keys -t "$SESSION_NAME:3" "claude" Enter
     else
         echo -e "${YELLOW}Warning: claude not found, opening shell instead${NC}"
@@ -163,8 +165,8 @@ if [[ "$SKIP_CLAUDE" == false ]]; then
     fi
 fi
 
-# Window 4: Terminal
-tmux new-window -t "$SESSION_NAME:4" -n "terminal" -c "$PROJECT_DIR"
+# Window 4: Server
+tmux new-window -t "$SESSION_NAME:4" -n "server" -c "$PROJECT_DIR"
 
 # Select the editor window (window 1)
 tmux select-window -t "$SESSION_NAME:1"
@@ -174,13 +176,14 @@ echo -e "${GREEN}Session created successfully!${NC}"
 echo ""
 echo "Windows:"
 echo "  1. editor     - Neovim"
-echo "  2. test       - Tests/Dev Server"
+echo "  2. terminal   - General Operations"
 echo "  3. claude     - Claude Code"
-echo "  4. terminal   - General Operations"
+echo "  4. server     - Dev Server/Tests"
 echo ""
 echo "Quick tips:"
 echo "  • Alt-h/l to switch windows"
 echo "  • Ctrl-a 1-4 to jump to window"
+echo "  • Ctrl-a 3 for Claude (approve workspace trust if prompted)"
 echo "  • Ctrl-a d to detach"
 echo ""
 
