@@ -13,7 +13,7 @@ Personal development environment configuration for macOS.
 
 ```bash
 # Clone the repository
-git clone https://github.com/brennonj/cli-config.git ~/.dotfiles
+git clone git@github.com:brennonj/cli-config.git ~/.dotfiles
 
 # Run the installation script
 cd ~/.dotfiles
