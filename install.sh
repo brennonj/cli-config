@@ -95,11 +95,11 @@ install_dependencies() {
             # Install Claude Code CLI via npm
             if ! command -v claude &> /dev/null; then
                 echo -e "${YELLOW}Installing Claude Code CLI via npm...${NC}"
-                sudo npm install -g claude-code
+                sudo npm install -g @anthropic-ai/claude-code
             else
                 echo -e "${GREEN}claude-code is already installed${NC}"
                 echo -e "${YELLOW}Checking for updates...${NC}"
-                sudo npm update -g claude-code || echo -e "${GREEN}claude-code is up to date${NC}"
+                sudo npm update -g @anthropic-ai/claude-code || echo -e "${GREEN}claude-code is up to date${NC}"
             fi
             ;;
         fedora)
@@ -118,11 +118,11 @@ install_dependencies() {
             # Install Claude Code CLI via npm
             if ! command -v claude &> /dev/null; then
                 echo -e "${YELLOW}Installing Claude Code CLI via npm...${NC}"
-                sudo npm install -g claude-code
+                sudo npm install -g @anthropic-ai/claude-code
             else
                 echo -e "${GREEN}claude-code is already installed${NC}"
                 echo -e "${YELLOW}Checking for updates...${NC}"
-                sudo npm update -g claude-code || echo -e "${GREEN}claude-code is up to date${NC}"
+                sudo npm update -g @anthropic-ai/claude-code || echo -e "${GREEN}claude-code is up to date${NC}"
             fi
             ;;
         ubuntu|debian)
@@ -141,11 +141,11 @@ install_dependencies() {
             # Install Claude Code CLI via npm
             if ! command -v claude &> /dev/null; then
                 echo -e "${YELLOW}Installing Claude Code CLI via npm...${NC}"
-                sudo npm install -g claude-code
+                sudo npm install -g @anthropic-ai/claude-code
             else
                 echo -e "${GREEN}claude-code is already installed${NC}"
                 echo -e "${YELLOW}Checking for updates...${NC}"
-                sudo npm update -g claude-code || echo -e "${GREEN}claude-code is up to date${NC}"
+                sudo npm update -g @anthropic-ai/claude-code || echo -e "${GREEN}claude-code is up to date${NC}"
             fi
             ;;
         macos)
@@ -190,11 +190,11 @@ install_dependencies() {
             # Install Claude Code CLI via npm
             if ! command -v claude &> /dev/null; then
                 echo -e "${YELLOW}Installing Claude Code CLI via npm...${NC}"
-                npm install -g claude-code
+                npm install -g @anthropic-ai/claude-code
             else
                 echo -e "${GREEN}claude-code is already installed${NC}"
                 echo -e "${YELLOW}Checking for updates...${NC}"
-                npm update -g claude-code || echo -e "${GREEN}claude-code is up to date${NC}"
+                npm update -g @anthropic-ai/claude-code || echo -e "${GREEN}claude-code is up to date${NC}"
             fi
             ;;
         *)
