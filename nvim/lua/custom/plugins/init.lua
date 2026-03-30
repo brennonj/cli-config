@@ -4,6 +4,29 @@
 -- See the kickstart.nvim README for more information
 return {
   {
+    'coder/claudecode.nvim',
+    dependencies = { 'folke/snacks.nvim' },
+    config = true,
+    keys = {
+      { '<leader>c', nil, desc = '[C]laude Code' },
+      { '<leader>cc', '<cmd>ClaudeCode<cr>', desc = '[C]laude [C]ode toggle' },
+      { '<leader>cf', '<cmd>ClaudeCodeFocus<cr>', desc = '[C]laude [F]ocus' },
+      { '<leader>cr', '<cmd>ClaudeCode --resume<cr>', desc = '[C]laude [R]esume' },
+      { '<leader>cC', '<cmd>ClaudeCode --continue<cr>', desc = '[C]laude [C]ontinue' },
+      { '<leader>cm', '<cmd>ClaudeCodeSelectModel<cr>', desc = '[C]laude select [M]odel' },
+      { '<leader>cb', '<cmd>ClaudeCodeAdd %<cr>', desc = '[C]laude add [B]uffer' },
+      { '<leader>cs', '<cmd>ClaudeCodeSend<cr>', mode = 'v', desc = '[C]laude [S]end selection' },
+      {
+        '<leader>cs',
+        '<cmd>ClaudeCodeTreeAdd<cr>',
+        desc = '[C]laude add file from tree',
+        ft = { 'NvimTree', 'neo-tree', 'oil', 'minifiles', 'netrw' },
+      },
+      { '<leader>ca', '<cmd>ClaudeCodeDiffAccept<cr>', desc = '[C]laude diff [A]ccept' },
+      { '<leader>cd', '<cmd>ClaudeCodeDiffDeny<cr>', desc = '[C]laude [D]iff deny' },
+    },
+  },
+  {
     'ThePrimeagen/harpoon',
     branch = 'harpoon2',
     dependencies = { 'nvim-lua/plenary.nvim' },
