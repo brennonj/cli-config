@@ -24,19 +24,19 @@ Arguments:
 Options:
     -n NAME        Custom session name (default: derived from directory)
     -s             Skip opening Neovim automatically
-    -c             Skip starting Claude Code automatically
+    -c             Skip starting GitHub Copilot automatically
     -h             Show this help message
 
 Examples:
     devopen ~/Developer/my-project
     devopen .
     devopen ~/projects/website -n website-dev
-    devopen ~/code/api -s -c       # Skip Neovim and Claude
+    devopen ~/code/api -s -c       # Skip Neovim and Copilot
 
 Windows created:
     1. editor     - Neovim (unless -s is used)
     2. terminal   - General terminal operations
-    3. claude     - Claude Code (unless -c is used)
+    3. copilot   - GitHub Copilot (unless -c is used)
     4. server     - For running dev server/tests
 
 Keybindings:
@@ -51,7 +51,7 @@ EOF
 PROJECT_DIR=""
 SESSION_NAME=""
 SKIP_NVIM=false
-SKIP_CLAUDE=false
+SKIP_COPILOT=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -67,8 +67,8 @@ while [[ $# -gt 0 ]]; do
             SKIP_NVIM=true
             shift
             ;;
-        -c|--skip-claude)
-            SKIP_CLAUDE=true
+        -c|--skip-copilot)
+            SKIP_COPILOT=true
             shift
             ;;
         -*)
@@ -151,17 +151,17 @@ fi
 # Window 2: Terminal
 tmux new-window -t "$SESSION_NAME:2" -n "terminal" -c "$PROJECT_DIR"
 
-# Window 3: Claude Code
-tmux new-window -t "$SESSION_NAME:3" -n "claude" -c "$PROJECT_DIR"
-if [[ "$SKIP_CLAUDE" == false ]]; then
-    # Check if claude is available
-    if command -v claude &> /dev/null; then
+# Window 3: GitHub Copilot
+tmux new-window -t "$SESSION_NAME:3" -n "copilot" -c "$PROJECT_DIR"
+if [[ "$SKIP_COPILOT" == false ]]; then
+    # Check if gh copilot is available
+    if command -v copilot &> /dev/null; then
         # Small delay to ensure shell is ready
         sleep 0.1
-        tmux send-keys -t "$SESSION_NAME:3" "claude" Enter
+        tmux send-keys -t "$SESSION_NAME:3" "copilot" Enter
     else
-        echo -e "${YELLOW}Warning: claude not found, opening shell instead${NC}"
-        echo -e "${YELLOW}Install Claude Code from: https://github.com/anthropics/claude-code${NC}"
+        echo -e "${YELLOW}Warning: copilot not found, opening shell instead${NC}"
+        echo -e "${YELLOW}Install GitHub Copilot CLI: gh extension install github/gh-copilot${NC}"
     fi
 fi
 
@@ -177,13 +177,13 @@ echo ""
 echo "Windows:"
 echo "  1. editor     - Neovim"
 echo "  2. terminal   - General Operations"
-echo "  3. claude     - Claude Code"
+echo "  3. copilot    - GitHub Copilot"
 echo "  4. server     - Dev Server/Tests"
 echo ""
 echo "Quick tips:"
 echo "  • Alt-h/l to switch windows"
 echo "  • Ctrl-a 1-4 to jump to window"
-echo "  • Ctrl-a 3 for Claude (approve workspace trust if prompted)"
+echo "  • Ctrl-a 3 for Copilot"
 echo "  • Ctrl-a d to detach"
 echo ""
 
