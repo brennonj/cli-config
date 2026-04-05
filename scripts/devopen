@@ -25,23 +25,25 @@ Options:
     -n NAME        Custom session name (default: derived from directory)
     -s             Skip opening Neovim automatically
     -c             Skip starting GitHub Copilot automatically
+    -C             Skip starting Claude Code automatically
     -h             Show this help message
 
 Examples:
     devopen ~/Developer/my-project
     devopen .
     devopen ~/projects/website -n website-dev
-    devopen ~/code/api -s -c       # Skip Neovim and Copilot
+    devopen ~/code/api -s -c -C    # Skip Neovim, Copilot, and Claude
 
 Windows created:
     1. editor     - Neovim (unless -s is used)
     2. terminal   - General terminal operations
-    3. copilot   - GitHub Copilot (unless -c is used)
-    4. server     - For running dev server/tests
+    3. copilot    - GitHub Copilot (unless -c is used)
+    4. claude     - Claude Code (unless -C is used)
+    5. server     - For running dev server/tests
 
 Keybindings:
     Alt-h/l       - Switch between windows (no prefix!)
-    Ctrl-a 1-4    - Jump directly to window 1-4
+    Ctrl-a 1-5    - Jump directly to window 1-5
     Ctrl-a d      - Detach from session
     See WORKFLOW_GUIDE.md for complete keybindings
 EOF
@@ -52,6 +54,7 @@ PROJECT_DIR=""
 SESSION_NAME=""
 SKIP_NVIM=false
 SKIP_COPILOT=false
+SKIP_CLAUDE=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -69,6 +72,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -c|--skip-copilot)
             SKIP_COPILOT=true
+            shift
+            ;;
+        -C|--skip-claude)
+            SKIP_CLAUDE=true
             shift
             ;;
         -*)
@@ -165,8 +172,20 @@ if [[ "$SKIP_COPILOT" == false ]]; then
     fi
 fi
 
-# Window 4: Server
-tmux new-window -t "$SESSION_NAME:4" -n "server" -c "$PROJECT_DIR"
+# Window 4: Claude Code
+tmux new-window -t "$SESSION_NAME:4" -n "claude" -c "$PROJECT_DIR"
+if [[ "$SKIP_CLAUDE" == false ]]; then
+    if command -v claude &> /dev/null; then
+        sleep 0.1
+        tmux send-keys -t "$SESSION_NAME:4" "claude" Enter
+    else
+        echo -e "${YELLOW}Warning: claude not found, opening shell instead${NC}"
+        echo -e "${YELLOW}Install Claude Code: npm install -g @anthropic-ai/claude-code${NC}"
+    fi
+fi
+
+# Window 5: Server
+tmux new-window -t "$SESSION_NAME:5" -n "server" -c "$PROJECT_DIR"
 
 # Select the editor window (window 1)
 tmux select-window -t "$SESSION_NAME:1"
@@ -178,12 +197,14 @@ echo "Windows:"
 echo "  1. editor     - Neovim"
 echo "  2. terminal   - General Operations"
 echo "  3. copilot    - GitHub Copilot"
-echo "  4. server     - Dev Server/Tests"
+echo "  4. claude     - Claude Code"
+echo "  5. server     - Dev Server/Tests"
 echo ""
 echo "Quick tips:"
 echo "  • Alt-h/l to switch windows"
-echo "  • Ctrl-a 1-4 to jump to window"
+echo "  • Ctrl-a 1-5 to jump to window"
 echo "  • Ctrl-a 3 for Copilot"
+echo "  • Ctrl-a 4 for Claude"
 echo "  • Ctrl-a d to detach"
 echo ""
 
