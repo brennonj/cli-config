@@ -21,6 +21,9 @@ install_dependencies() {
 
     echo -e "${YELLOW}Installing dependencies for macOS...${NC}"
 
+    # Ensure ~/.bin is in PATH for this session so freshly installed binaries are usable immediately
+    export PATH="$HOME/.bin:$PATH"
+
     # Ensure Xcode Command Line Tools are installed (provides git, make, clang)
     if ! xcode-select -p &>/dev/null; then
         echo "Installing Xcode Command Line Tools..."
@@ -40,7 +43,8 @@ install_dependencies() {
         tmp=$(mktemp -d)
         curl -fsSL "https://github.com/neovim/neovim/releases/download/stable/nvim-macos-${arch}.tar.gz" -o "$tmp/nvim.tar.gz"
         tar -xzf "$tmp/nvim.tar.gz" -C "$tmp"
-        sudo cp -r "$tmp/nvim-macos-${arch}/." /usr/local/
+        mkdir -p ~/.local
+        cp -r "$tmp/nvim-macos-${arch}/." ~/.local/
         rm -rf "$tmp"
         echo -e "${GREEN}Neovim installed${NC}"
     else
@@ -55,6 +59,48 @@ install_dependencies() {
         echo -e "${GREEN}Claude Code CLI is already installed${NC}"
         echo -e "${YELLOW}Checking for updates...${NC}"
         claude update || echo -e "${GREEN}claude is up to date${NC}"
+    fi
+
+    # Install GitHub Copilot CLI
+    if ! command -v copilot &>/dev/null; then
+        echo -e "${YELLOW}Installing GitHub Copilot CLI...${NC}"
+        curl -fsSL https://gh.io/copilot-install | bash
+        echo -e "${GREEN}GitHub Copilot CLI installed${NC}"
+    else
+        echo -e "${GREEN}GitHub Copilot CLI is already installed${NC}"
+    fi
+
+    # Install nvm
+    if [ ! -f "$HOME/.nvm/nvm.sh" ]; then
+        echo -e "${YELLOW}Installing nvm...${NC}"
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+        echo -e "${GREEN}nvm installed${NC}"
+    else
+        echo -e "${GREEN}nvm is already installed${NC}"
+    fi
+
+    # Source nvm for use in this session
+    export NVM_DIR="$HOME/.nvm"
+    # shellcheck source=/dev/null
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+    # Install Node.js LTS if not already managed by nvm
+    if ! command -v node &>/dev/null; then
+        echo -e "${YELLOW}Installing Node.js LTS via nvm...${NC}"
+        nvm install --lts
+        nvm use --lts
+        echo -e "${GREEN}Node.js installed${NC}"
+    else
+        echo -e "${GREEN}Node.js is already installed${NC}"
+    fi
+
+    # Install Firebase CLI
+    if ! command -v firebase &>/dev/null; then
+        echo -e "${YELLOW}Installing Firebase CLI...${NC}"
+        npm install -g firebase-tools
+        echo -e "${GREEN}Firebase CLI installed${NC}"
+    else
+        echo -e "${GREEN}Firebase CLI is already installed${NC}"
     fi
 }
 
@@ -112,26 +158,9 @@ echo "Installing devopen script..."
 create_symlink "${DOTFILES_DIR}/scripts/devopen" ~/.bin/devopen
 chmod +x ~/.bin/devopen
 
-# Ensure ~/.bin is in PATH
-if [[ ":$PATH:" != *":$HOME/.bin:"* ]]; then
-    echo -e "${YELLOW}Adding ~/.bin to PATH in ~/.zshrc${NC}"
-
-    # Add to .zshrc if it exists
-    if [ -f "$HOME/.zshrc" ]; then
-        if ! grep -q 'export PATH="$HOME/.bin:$PATH"' "$HOME/.zshrc"; then
-            echo 'export PATH="$HOME/.bin:$PATH"' >> "$HOME/.zshrc"
-            echo -e "${GREEN}Added PATH export to ~/.zshrc${NC}"
-        fi
-    fi
-
-    # Add to .bashrc if it exists
-    if [ -f "$HOME/.bashrc" ]; then
-        if ! grep -q 'export PATH="$HOME/.bin:$PATH"' "$HOME/.bashrc"; then
-            echo 'export PATH="$HOME/.bin:$PATH"' >> "$HOME/.bashrc"
-            echo -e "${GREEN}Added PATH export to ~/.bashrc${NC}"
-        fi
-    fi
-fi
+# Install zsh config
+echo "Installing zsh config..."
+create_symlink "${DOTFILES_DIR}/zsh/.zshrc" ~/.zshrc
 
 # Install tmux config
 echo "Installing tmux config..."
@@ -155,3 +184,4 @@ echo "  1. Make sure ~/.bin is in your PATH"
 echo "  2. Restart your terminal or source your shell config"
 echo "  3. For neovim: Open nvim and run :Lazy sync if using lazy.nvim"
 echo "  4. For tmux: Start tmux and press prefix + I to install plugins (if using TPM)"
+echo "  5. Authenticate GitHub Copilot: copilot"
