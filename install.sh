@@ -13,199 +13,49 @@ DOTFILES_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 echo "Installing dotfiles from ${DOTFILES_DIR}"
 
-# Detect OS and install dependencies
-detect_os() {
-    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        if [ -f /etc/os-release ]; then
-            . /etc/os-release
-            echo "$ID"
-        else
-            echo "linux-unknown"
-        fi
-    elif [[ "$OSTYPE" == "darwin"* ]]; then
-        echo "macos"
-    else
-        echo "unknown"
-    fi
-}
-
 install_dependencies() {
-    local os=$(detect_os)
+    if [[ "$OSTYPE" != "darwin"* ]]; then
+        echo -e "${RED}This install script only supports macOS.${NC}"
+        exit 1
+    fi
 
-    echo "Detected OS: $os"
+    echo -e "${YELLOW}Installing dependencies for macOS...${NC}"
 
-    case "$os" in
-        rhel|centos)
-            echo -e "${YELLOW}Installing dependencies for RHEL/CentOS...${NC}"
+    # Ensure Xcode Command Line Tools are installed (provides git, make, clang)
+    if ! xcode-select -p &>/dev/null; then
+        echo "Installing Xcode Command Line Tools..."
+        xcode-select --install
+        echo -e "${YELLOW}Please re-run this script after the Xcode CLT installation completes.${NC}"
+        exit 0
+    fi
+    echo -e "${GREEN}Xcode Command Line Tools are installed${NC}"
 
-            # Install EPEL repository if not already installed
-            if ! rpm -q epel-release &>/dev/null; then
-                echo "Installing EPEL repository..."
-                sudo dnf install -y epel-release
-            fi
+    # Install Neovim via direct download from GitHub releases
+    local arch
+    [[ $(uname -m) == 'arm64' ]] && arch="arm64" || arch="x86_64"
 
-            # Install required build tools and dependencies
-            echo "Installing build tools and dependencies..."
-            sudo dnf install -y \
-                git \
-                curl \
-                tmux \
-                gcc \
-                make \
-                cmake \
-                nodejs \
-                npm
+    if ! command -v nvim &>/dev/null; then
+        echo -e "${YELLOW}Installing Neovim...${NC}"
+        local tmp
+        tmp=$(mktemp -d)
+        curl -fsSL "https://github.com/neovim/neovim/releases/download/stable/nvim-macos-${arch}.tar.gz" -o "$tmp/nvim.tar.gz"
+        tar -xzf "$tmp/nvim.tar.gz" -C "$tmp"
+        sudo cp -r "$tmp/nvim-macos-${arch}/." /usr/local/
+        rm -rf "$tmp"
+        echo -e "${GREEN}Neovim installed${NC}"
+    else
+        echo -e "${GREEN}Neovim is already installed${NC}"
+    fi
 
-            # Install neovim from EPEL or build from source
-            if rpm -q neovim &>/dev/null; then
-                echo -e "${GREEN}Neovim already installed${NC}"
-            else
-                echo "Installing neovim..."
-                # Try to install from package manager first
-                if sudo dnf install -y neovim 2>/dev/null; then
-                    echo -e "${GREEN}Neovim installed via dnf${NC}"
-                else
-                    # If package manager fails, build from source
-                    echo "Building neovim from source..."
-
-                    # Install build dependencies
-                    sudo dnf install -y \
-                        git \
-                        gcc \
-                        g++ \
-                        cmake \
-                        make \
-                        pkg-config \
-                        unzip \
-                        gettext-devel
-
-                    # Clone and build neovim
-                    local temp_dir=$(mktemp -d)
-                    cd "$temp_dir"
-                    git clone --depth 1 https://github.com/neovim/neovim.git
-                    cd neovim
-                    make CMAKE_BUILD_TYPE=Release
-                    sudo make install
-                    cd "$DOTFILES_DIR"
-                    rm -rf "$temp_dir"
-                    echo -e "${GREEN}Neovim built and installed from source${NC}"
-                fi
-            fi
-
-            # Install Claude Code CLI via npm
-            if ! command -v claude &> /dev/null; then
-                echo -e "${YELLOW}Installing Claude Code CLI via npm...${NC}"
-                sudo npm install -g @anthropic-ai/claude-code
-            else
-                echo -e "${GREEN}claude-code is already installed${NC}"
-                echo -e "${YELLOW}Checking for updates...${NC}"
-                sudo npm update -g @anthropic-ai/claude-code || echo -e "${GREEN}claude-code is up to date${NC}"
-            fi
-            ;;
-        fedora)
-            echo -e "${YELLOW}Installing dependencies for Fedora...${NC}"
-            sudo dnf install -y \
-                git \
-                curl \
-                neovim \
-                tmux \
-                gcc \
-                make \
-                cmake \
-                nodejs \
-                npm
-
-            # Install Claude Code CLI via npm
-            if ! command -v claude &> /dev/null; then
-                echo -e "${YELLOW}Installing Claude Code CLI via npm...${NC}"
-                sudo npm install -g @anthropic-ai/claude-code
-            else
-                echo -e "${GREEN}claude-code is already installed${NC}"
-                echo -e "${YELLOW}Checking for updates...${NC}"
-                sudo npm update -g @anthropic-ai/claude-code || echo -e "${GREEN}claude-code is up to date${NC}"
-            fi
-            ;;
-        ubuntu|debian)
-            echo -e "${YELLOW}Installing dependencies for Debian/Ubuntu...${NC}"
-            sudo apt-get update
-            sudo apt-get install -y \
-                git \
-                curl \
-                neovim \
-                tmux \
-                build-essential \
-                cmake \
-                nodejs \
-                npm
-
-            # Install Claude Code CLI via npm
-            if ! command -v claude &> /dev/null; then
-                echo -e "${YELLOW}Installing Claude Code CLI via npm...${NC}"
-                sudo npm install -g @anthropic-ai/claude-code
-            else
-                echo -e "${GREEN}claude-code is already installed${NC}"
-                echo -e "${YELLOW}Checking for updates...${NC}"
-                sudo npm update -g @anthropic-ai/claude-code || echo -e "${GREEN}claude-code is up to date${NC}"
-            fi
-            ;;
-        macos)
-            echo -e "${YELLOW}Installing dependencies for macOS...${NC}"
-
-            # Check if Homebrew is installed
-            if ! command -v brew &> /dev/null; then
-                echo "Installing Homebrew..."
-                /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-                # Add Homebrew to PATH for this session
-                if [[ $(uname -m) == 'arm64' ]]; then
-                    eval "$(/opt/homebrew/bin/brew shellenv)"
-                else
-                    eval "$(/usr/local/bin/brew shellenv)"
-                fi
-            else
-                echo -e "${GREEN}Homebrew is already installed${NC}"
-            fi
-
-            # Function to install or upgrade a package
-            install_or_upgrade() {
-                local package=$1
-                if brew list "$package" &> /dev/null; then
-                    echo -e "${GREEN}$package is already installed${NC}"
-                    echo -e "${YELLOW}Checking for updates...${NC}"
-                    brew upgrade "$package" || echo -e "${GREEN}$package is up to date${NC}"
-                else
-                    echo -e "${YELLOW}Installing $package...${NC}"
-                    brew install "$package"
-                fi
-            }
-
-            # Install or upgrade required packages
-            install_or_upgrade "git"
-            install_or_upgrade "curl"
-            install_or_upgrade "neovim"
-            install_or_upgrade "tmux"
-            install_or_upgrade "cmake"
-            install_or_upgrade "node"
-
-            # Install Claude Code CLI via npm
-            if ! command -v claude &> /dev/null; then
-                echo -e "${YELLOW}Installing Claude Code CLI via npm...${NC}"
-                npm install -g @anthropic-ai/claude-code
-            else
-                echo -e "${GREEN}claude-code is already installed${NC}"
-                echo -e "${YELLOW}Checking for updates...${NC}"
-                npm update -g @anthropic-ai/claude-code || echo -e "${GREEN}claude-code is up to date${NC}"
-            fi
-            ;;
-        *)
-            echo -e "${YELLOW}Unsupported OS: $os${NC}"
-            echo "Please install the following manually:"
-            echo "  - git"
-            echo "  - neovim"
-            echo "  - tmux"
-            echo "  - zsh (optional)"
-            ;;
-    esac
+    # Install Claude Code CLI via official installer
+    if ! command -v claude &>/dev/null; then
+        echo -e "${YELLOW}Installing Claude Code CLI...${NC}"
+        curl -fsSL https://claude.ai/install.sh | sh
+    else
+        echo -e "${GREEN}Claude Code CLI is already installed${NC}"
+        echo -e "${YELLOW}Checking for updates...${NC}"
+        claude update || echo -e "${GREEN}claude is up to date${NC}"
+    fi
 }
 
 # Parse command line arguments
