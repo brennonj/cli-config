@@ -6,9 +6,10 @@ Personal development environment configuration for macOS.
 
 - **devopen** - Custom script for opening projects in tmux/nvim
 - **tmux** - Terminal multiplexer configuration
-- **neovim** - Text editor configuration
+- **neovim** - Text editor configuration (includes `r_language_server` LSP setup)
 - **zsh** - Shell configuration
 - **Claude Code** - AI-powered coding assistant settings
+- **R** - R + GLPK, installed via `scripts/install-r.sh` (no Homebrew required)
 
 ## Quick Start
 
@@ -26,6 +27,7 @@ The install script will:
 - Check for tmux, devopen's one hard requirement (prints a `brew install tmux` hint if it's missing, since it isn't installed automatically)
 - Install Neovim via direct download from GitHub releases, if not already installed
 - Install/update the Claude Code CLI via the official installer
+- Install R (arm64, via the official CRAN `.pkg`), build GLPK from source into `~/.local/glpk`, and install the R packages needed by FantasyFootballAnalyticsR — via `scripts/install-r.sh` (skip with `--skip-r`; installing R itself requires your admin password in a GUI prompt)
 - Create symlinks from this repo to the appropriate locations (devopen, zsh, tmux, neovim, Claude Code settings)
 - Backup any existing configs with timestamps
 - Set up necessary directories
@@ -59,7 +61,8 @@ export PATH="$HOME/.bin:$PATH"
 .dotfiles/
 ├── install.sh           # Installation script
 ├── scripts/
-│   └── devopen         # Project opener script
+│   ├── devopen          # Project opener script
+│   └── install-r.sh    # R + GLPK + R package installer
 ├── tmux/
 │   └── .tmux.conf      # Tmux configuration
 ├── zsh/
@@ -75,7 +78,7 @@ export PATH="$HOME/.bin:$PATH"
 
 ### Neovim
 - Open nvim and run `:Lazy sync` (if using lazy.nvim)
-- Install LSP servers as needed
+- `r_language_server` is declared in `init.lua`'s LSP `servers` table, so Mason will auto-install it on next launch (requires R + the `languageserver` R package, installed by `scripts/install-r.sh`)
 
 ### Tmux
 - Start tmux

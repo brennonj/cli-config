@@ -59,11 +59,18 @@ install_dependencies() {
         echo -e "${YELLOW}Checking for updates...${NC}"
         claude update || echo -e "${GREEN}claude is up to date${NC}"
     fi
+
+    # Install R, GLPK, and R packages (unless skipped)
+    if [ "$SKIP_R" = false ]; then
+        echo -e "${YELLOW}Setting up R...${NC}"
+        "${DOTFILES_DIR}/scripts/install-r.sh"
+    fi
 }
 
 # Parse command line arguments
 SKIP_CLAUDE=false
 SKIP_NVIM=false
+SKIP_R=false
 while [[ $# -gt 0 ]]; do
     case $1 in
         --skip-claude)
@@ -74,9 +81,13 @@ while [[ $# -gt 0 ]]; do
             SKIP_NVIM=true
             shift
             ;;
+        --skip-r)
+            SKIP_R=true
+            shift
+            ;;
         *)
             echo "Unknown option: $1"
-            echo "Usage: $0 [--skip-claude] [--skip-nvim]"
+            echo "Usage: $0 [--skip-claude] [--skip-nvim] [--skip-r]"
             exit 1
             ;;
     esac
@@ -146,5 +157,5 @@ echo ""
 echo "Next steps:"
 echo "  1. Make sure ~/.bin is in your PATH"
 echo "  2. Restart your terminal or source your shell config"
-echo "  3. For neovim: Open nvim and run :Lazy sync if using lazy.nvim"
+echo "  3. For neovim: Open nvim and run :Lazy sync if using lazy.nvim (Mason will auto-install r_language_server)"
 echo "  4. For tmux: Start tmux and press prefix + I to install plugins (if using TPM)"

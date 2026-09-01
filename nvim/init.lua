@@ -695,6 +695,8 @@ require("lazy").setup({
 				-- ts_ls = {},
 				--
 
+				r_language_server = {},
+
 				lua_ls = {
 					-- cmd = { ... },
 					-- filetypes = { ... },
