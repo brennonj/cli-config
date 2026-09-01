@@ -106,15 +106,20 @@ install_dependencies() {
 
 # Parse command line arguments
 SKIP_CLAUDE=false
+SKIP_NVIM=false
 while [[ $# -gt 0 ]]; do
     case $1 in
         --skip-claude)
             SKIP_CLAUDE=true
             shift
             ;;
+        --skip-nvim)
+            SKIP_NVIM=true
+            shift
+            ;;
         *)
             echo "Unknown option: $1"
-            echo "Usage: $0 [--skip-claude]"
+            echo "Usage: $0 [--skip-claude] [--skip-nvim]"
             exit 1
             ;;
     esac
@@ -166,9 +171,11 @@ create_symlink "${DOTFILES_DIR}/zsh/.zshrc" ~/.zshrc
 echo "Installing tmux config..."
 create_symlink "${DOTFILES_DIR}/tmux/.tmux.conf" ~/.tmux.conf
 
-# Install neovim config
-echo "Installing neovim config..."
-create_symlink "${DOTFILES_DIR}/nvim" ~/.config/nvim
+# Install neovim config (unless skipped)
+if [ "$SKIP_NVIM" = false ]; then
+    echo "Installing neovim config..."
+    create_symlink "${DOTFILES_DIR}/nvim" ~/.config/nvim
+fi
 
 # Install Claude Code config (unless skipped)
 if [ "$SKIP_CLAUDE" = false ]; then
