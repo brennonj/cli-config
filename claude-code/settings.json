@@ -1,10 +1,6 @@
 {
-  "permissions": {
-    "defaultMode": "default"
-  },
-  "enabledPlugins": {
-    "swift-lsp@claude-plugins-official": true
-  },
-  "alwaysThinkingEnabled": true,
-  "theme": "dark"
+  "theme": "dark",
+  "inputNeededNotifEnabled": true,
+  "agentPushNotifEnabled": true,
+  "tui": "fullscreen"
 }
