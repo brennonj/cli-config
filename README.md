@@ -7,6 +7,7 @@ Personal development environment configuration for macOS.
 - **devopen** - Custom script for opening projects in tmux/nvim
 - **tmux** - Terminal multiplexer configuration
 - **neovim** - Text editor configuration
+- **zsh** - Shell configuration
 - **Claude Code** - AI-powered coding assistant settings
 
 ## Quick Start
@@ -21,11 +22,11 @@ cd ~/.dotfiles
 ```
 
 The install script will:
-- Detect your operating system (macOS, Linux variants)
-- Install Homebrew (macOS) or system package managers
-- Install/upgrade required packages: tmux, neovim, Node.js, and dependencies
-- Install Claude Code CLI via npm
-- Create symlinks from this repo to the appropriate locations
+- Verify you're on macOS (the only supported platform)
+- Check for tmux, devopen's one hard requirement (prints a `brew install tmux` hint if it's missing, since it isn't installed automatically)
+- Install Neovim via direct download from GitHub releases, if not already installed
+- Install/update the Claude Code CLI via the official installer
+- Create symlinks from this repo to the appropriate locations (devopen, zsh, tmux, neovim, Claude Code settings)
 - Backup any existing configs with timestamps
 - Set up necessary directories
 - Make scripts executable
@@ -35,20 +36,21 @@ The install script will:
 If you prefer to set things up manually:
 
 ```bash
-# Install Claude Code CLI via npm
-npm install -g claude-code
+# Install Claude Code CLI
+curl -fsSL https://claude.ai/install.sh | sh
 
 # Link configs
+ln -sf ~/.dotfiles/zsh/.zshrc ~/.zshrc
 ln -sf ~/.dotfiles/tmux/.tmux.conf ~/.tmux.conf
 ln -sf ~/.dotfiles/nvim ~/.config/nvim
-ln -sf ~/.dotfiles/scripts/devopen ~/bin/devopen
+ln -sf ~/.dotfiles/scripts/devopen ~/.bin/devopen
 ln -sf ~/.dotfiles/claude-code/settings.json ~/.claude/settings.json
 
 # Make scripts executable
-chmod +x ~/bin/devopen
+chmod +x ~/.bin/devopen
 
-# Ensure ~/bin is in PATH
-export PATH="$HOME/bin:$PATH"
+# Ensure ~/.bin is in PATH
+export PATH="$HOME/.bin:$PATH"
 ```
 
 ## Structure
@@ -60,6 +62,8 @@ export PATH="$HOME/bin:$PATH"
 │   └── devopen         # Project opener script
 ├── tmux/
 │   └── .tmux.conf      # Tmux configuration
+├── zsh/
+│   └── .zshrc          # Shell configuration
 ├── nvim/               # Neovim configuration
 │   ├── init.lua
 │   └── ...
@@ -78,9 +82,9 @@ export PATH="$HOME/bin:$PATH"
 - Press `prefix + I` to install plugins (if using TPM)
 
 ### Shell PATH
-Add this to your `~/.bashrc` or `~/.zshrc` if ~/bin is not in your PATH:
+Add this to your `~/.zshrc` if ~/.bin is not in your PATH:
 ```bash
-export PATH="$HOME/bin:$PATH"
+export PATH="$HOME/.bin:$PATH"
 ```
 
 ## Updating
